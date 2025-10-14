@@ -222,7 +222,17 @@ const courierRuns: CourierRun[] = [
       },
       {
         streetName: "Ruahine Street",
-        numberRange: { min: 5, max: 249 },
+        numberRange: { min: 5, max: 49 },
+        oddEven: "odd",
+      },
+      {
+        streetName: "Ruahine Street",
+        specificNumbers: [51],
+        oddEven: "odd",
+      },
+      {
+        streetName: "Ruahine Street",
+        numberRange: { min: 161, max: 249 },
         oddEven: "odd",
       },
       {
@@ -490,6 +500,10 @@ const courierRuns: CourierRun[] = [
         streetName: "Ferguson Street",
         numberRange: { min: 349, max: 541 },
         oddEven: "odd",
+      },
+      {
+        streetName: "Ferguson Street",
+        specificNumbers: [327],
       },
       {
         streetName: "Fitzherbert Avenue",
@@ -1026,7 +1040,8 @@ function generateRandomAddress(): { address: string; correctRun: string } {
   const allRuns = courierRuns;
   const randomRun = allRuns[Math.floor(Math.random() * allRuns.length)];
   
-  const useWholeStreet = Math.random() < 0.4;
+  const totalStreets = randomRun.wholeStreets.length + randomRun.splitStreets.length;
+  const useWholeStreet = totalStreets > 0 && Math.random() < (randomRun.wholeStreets.length / totalStreets);
   
   if (useWholeStreet && randomRun.wholeStreets.length > 0) {
     const randomStreet = randomRun.wholeStreets[Math.floor(Math.random() * randomRun.wholeStreets.length)];
@@ -1039,7 +1054,9 @@ function generateRandomAddress(): { address: string; correctRun: string } {
     
     let houseNumber: number;
     
-    if (randomSplitStreet.numberRange) {
+    if (randomSplitStreet.specificNumbers && randomSplitStreet.specificNumbers.length > 0) {
+      houseNumber = randomSplitStreet.specificNumbers[Math.floor(Math.random() * randomSplitStreet.specificNumbers.length)];
+    } else if (randomSplitStreet.numberRange) {
       const { min, max } = randomSplitStreet.numberRange;
       houseNumber = Math.floor(Math.random() * (max - min + 1)) + min;
       

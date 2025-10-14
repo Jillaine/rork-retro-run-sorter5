@@ -11,7 +11,7 @@ type QuizMode = "beginner" | "intermediate" | "advanced";
 
 export default function QuizScreen() {
   const { mode = "beginner" } = useLocalSearchParams<{ mode?: QuizMode }>();
-  const [questions] = useState<QuizQuestion[]>(() => generateQuizQuestions(10));
+  const [questions, setQuestions] = useState<QuizQuestion[]>(() => generateQuizQuestions(10));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [score, setScore] = useState<number>(0);
   const [wrongAnswers, setWrongAnswers] = useState<number>(0);
@@ -21,7 +21,7 @@ export default function QuizScreen() {
   const [showMapButton, setShowMapButton] = useState<boolean>(false);
   const [feedbackColor] = useState(new Animated.Value(0));
   const [typedAnswer, setTypedAnswer] = useState<string>("");
-  const [timeLeft, setTimeLeft] = useState<number>(6);
+  const [timeLeft, setTimeLeft] = useState<number>(10);
   const [timerActive, setTimerActive] = useState<boolean>(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<TextInput>(null);
@@ -104,10 +104,9 @@ export default function QuizScreen() {
     });
   }, [animateFeedback, score]);
 
-  // Timer logic for advanced mode
   useEffect(() => {
     if (isAdvancedMode && !showFeedback) {
-      setTimeLeft(6);
+      setTimeLeft(10);
       setTimerActive(true);
       
       timerRef.current = setInterval(() => {
@@ -128,6 +127,24 @@ export default function QuizScreen() {
       }
     };
   }, [currentQuestionIndex, showFeedback, isAdvancedMode, handleTimeUp]);
+
+  useEffect(() => {
+    setQuestions(generateQuizQuestions(10));
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    setWrongAnswers(0);
+    setSelectedAnswer(null);
+    setShowFeedback(false);
+    setShowCorrectAnswerText(false);
+    setShowMapButton(false);
+    setTypedAnswer("");
+    setTimeLeft(10);
+    setTimerActive(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [mode]);
 
   const handleAnswerPress = useCallback((selectedRun: string) => {
     if (!selectedRun?.trim() || selectedAnswer || showFeedback || (isAdvancedMode && !timerActive)) return;
