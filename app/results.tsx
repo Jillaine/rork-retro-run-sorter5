@@ -6,9 +6,10 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ResultsScreen() {
-  const { score, total } = useLocalSearchParams<{
+  const { score, total, mode } = useLocalSearchParams<{
     score: string;
     total: string;
+    mode?: string;
   }>();
 
   const finalScore = parseInt(score || "0", 10);
@@ -26,6 +27,13 @@ export default function ResultsScreen() {
   const performanceTextStyle = {
     ...styles.performanceText,
     color: percentage >= 80 ? "#9DC183" : percentage >= 60 ? "#DAA520" : "#CD853F",
+  };
+
+  const handlePlayAgain = () => {
+    router.replace({
+      pathname: "/quiz",
+      params: { mode: mode || "beginner", timestamp: Date.now().toString() }
+    });
   };
 
   const handleBackToModeSelection = () => {
@@ -60,6 +68,10 @@ export default function ResultsScreen() {
         </View>
 
         <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.playAgainButton} onPress={handlePlayAgain}>
+            <Text style={styles.playAgainButtonText}>PLAY AGAIN</Text>
+          </TouchableOpacity>
+          
           <TouchableOpacity style={styles.homeButton} onPress={handleBackToModeSelection}>
             <Text style={styles.homeButtonText}>CHOOSE MODE</Text>
           </TouchableOpacity>
@@ -144,6 +156,20 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     gap: 16,
+  },
+  playAgainButton: {
+    backgroundColor: "#008B8B", // teal
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  playAgainButtonText: {
+    color: "#F5F5DC",
+    fontSize: 20,
+    fontWeight: "700",
+    letterSpacing: 2,
   },
   homeButton: {
     backgroundColor: "#9DC183", // avocado green

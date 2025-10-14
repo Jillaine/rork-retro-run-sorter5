@@ -143,21 +143,25 @@ export default function QuizScreen() {
   }, [currentQuestionIndex, showFeedback, isBeginnerMode]);
 
   useEffect(() => {
-    setQuestions(generateQuizQuestions(10));
-    setCurrentQuestionIndex(0);
-    setScore(0);
-    setWrongAnswers(0);
-    setSelectedAnswer(null);
-    setShowFeedback(false);
-    setShowCorrectAnswerText(false);
-    setShowMapButton(false);
-    setTypedAnswer("");
-    setTimeLeft(10);
-    setTimerActive(false);
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    
+    setTimerActive(false);
+    setShowFeedback(false);
+    setShowCorrectAnswerText(false);
+    setShowMapButton(false);
+    setSelectedAnswer(null);
+    setTypedAnswer("");
+    setTimeLeft(10);
+    setScore(0);
+    setWrongAnswers(0);
+    setCurrentQuestionIndex(0);
+    setQuestions(generateQuizQuestions(10));
+    
+    Keyboard.dismiss();
+    inputRef.current?.blur();
   }, [mode, timestamp]);
 
   const handleAnswerPress = useCallback((selectedRun: string) => {
