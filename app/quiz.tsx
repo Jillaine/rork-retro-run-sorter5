@@ -90,20 +90,6 @@ export default function QuizScreen() {
     });
   }, [feedbackColor, isLastQuestion, score, wrongAnswers, questions.length, mode, isBeginnerMode]);
 
-  const handleTimeUp = useCallback(async () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setTimerActive(false);
-    
-    setWrongAnswers(prev => {
-      const newWrong = prev + 1;
-      animateFeedback(false, score, newWrong);
-      return newWrong;
-    });
-  }, [animateFeedback, score]);
-
   useEffect(() => {
     if (isAdvancedMode && !showFeedback) {
       setTimeLeft(10);
@@ -112,7 +98,20 @@ export default function QuizScreen() {
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
-            handleTimeUp();
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+            setTimerActive(false);
+            
+            setWrongAnswers(prevWrong => {
+              const newWrong = prevWrong + 1;
+              setScore(prevScore => {
+                animateFeedback(false, prevScore, newWrong);
+                return prevScore;
+              });
+              return newWrong;
+            });
             return 0;
           }
           return prev - 1;
@@ -126,7 +125,7 @@ export default function QuizScreen() {
         timerRef.current = null;
       }
     };
-  }, [currentQuestionIndex, showFeedback, isAdvancedMode, handleTimeUp]);
+  }, [currentQuestionIndex, showFeedback, isAdvancedMode, animateFeedback]);
 
   useEffect(() => {
     setQuestions(generateQuizQuestions(10));
@@ -147,7 +146,7 @@ export default function QuizScreen() {
   }, [mode]);
 
   const handleAnswerPress = useCallback((selectedRun: string) => {
-    if (!selectedRun?.trim() || selectedAnswer || showFeedback || (isAdvancedMode && !timerActive)) return;
+    if (!selectedRun?.trim() || selectedAnswer || showFeedback) return;
     
     setSelectedAnswer(selectedRun);
     const isCorrect = selectedRun === currentQuestion.correctAnswer;
@@ -161,7 +160,7 @@ export default function QuizScreen() {
     setTimeout(() => {
       animateFeedback(isCorrect);
     }, 200);
-  }, [selectedAnswer, showFeedback, currentQuestion.correctAnswer, animateFeedback, timerActive, isAdvancedMode]);
+  }, [selectedAnswer, showFeedback, currentQuestion.correctAnswer, animateFeedback]);
 
   const handleTypedSubmit = useCallback(() => {
     if (!typedAnswer.trim() || showFeedback) return;
@@ -311,17 +310,17 @@ export default function QuizScreen() {
                 placeholderTextColor="#999"
                 keyboardType="numeric"
                 maxLength={3}
-                editable={!showFeedback && (!isAdvancedMode || timerActive)}
+                editable={!showFeedback}
                 onSubmitEditing={handleTypedSubmit}
                 returnKeyType="done"
               />
               <TouchableOpacity 
                 style={[
                   styles.submitButton,
-                  (!typedAnswer.trim() || showFeedback || (isAdvancedMode && !timerActive)) && styles.submitButtonDisabled
+                  (!typedAnswer.trim() || showFeedback) && styles.submitButtonDisabled
                 ]} 
                 onPress={handleTypedSubmit}
-                disabled={!typedAnswer.trim() || showFeedback || (isAdvancedMode && !timerActive)}
+                disabled={!typedAnswer.trim() || showFeedback}
               >
                 <Text style={styles.submitButtonText}>SUBMIT</Text>
               </TouchableOpacity>
