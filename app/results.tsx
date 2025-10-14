@@ -30,7 +30,7 @@ export default function ResultsScreen() {
   };
 
   const handlePlayAgain = () => {
-    router.push({
+    router.replace({
       pathname: "/quiz",
       params: { mode }
     });
