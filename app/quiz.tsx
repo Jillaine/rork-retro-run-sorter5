@@ -128,6 +128,14 @@ export default function QuizScreen() {
   }, [currentQuestionIndex, showFeedback, isAdvancedMode, animateFeedback]);
 
   useEffect(() => {
+    if (!isBeginnerMode && !showFeedback) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [currentQuestionIndex, showFeedback, isBeginnerMode]);
+
+  useEffect(() => {
     setQuestions(generateQuizQuestions(10));
     setCurrentQuestionIndex(0);
     setScore(0);
@@ -302,17 +310,19 @@ export default function QuizScreen() {
                 style={styles.numericInput}
                 value={typedAnswer}
                 onChangeText={(text) => {
-                  if (text.length <= 3) {
-                    setTypedAnswer(text);
+                  const numericOnly = text.replace(/[^0-9]/g, '');
+                  if (numericOnly.length <= 3) {
+                    setTypedAnswer(numericOnly);
                   }
                 }}
                 placeholder="Enter run number"
                 placeholderTextColor="#999"
-                keyboardType="numeric"
+                keyboardType="number-pad"
                 maxLength={3}
                 editable={!showFeedback}
                 onSubmitEditing={handleTypedSubmit}
                 returnKeyType="done"
+                autoFocus={!showFeedback}
               />
               <TouchableOpacity 
                 style={[
