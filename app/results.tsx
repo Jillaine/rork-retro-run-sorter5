@@ -29,7 +29,7 @@ export default function ResultsScreen() {
   };
 
   const handleBackToModeSelection = () => {
-    router.push("/mode-selection");
+    router.replace("/mode-selection");
   };
 
 

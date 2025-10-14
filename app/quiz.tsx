@@ -10,7 +10,7 @@ import { generateQuizQuestions, type QuizQuestion } from "@/data/quiz-data";
 type QuizMode = "beginner" | "intermediate" | "advanced";
 
 export default function QuizScreen() {
-  const { mode = "beginner" } = useLocalSearchParams<{ mode?: QuizMode }>();
+  const { mode = "beginner", timestamp } = useLocalSearchParams<{ mode?: QuizMode; timestamp?: string }>();
   const [questions, setQuestions] = useState<QuizQuestion[]>(() => generateQuizQuestions(10));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [score, setScore] = useState<number>(0);
@@ -158,7 +158,7 @@ export default function QuizScreen() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-  }, [mode]);
+  }, [mode, timestamp]);
 
   const handleAnswerPress = useCallback((selectedRun: string) => {
     if (!selectedRun?.trim() || selectedAnswer || showFeedback) return;
@@ -204,7 +204,7 @@ export default function QuizScreen() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    router.push("/mode-selection");
+    router.replace("/mode-selection");
   }, []);
 
   const generateMapUrl = useCallback((address: string): string => {

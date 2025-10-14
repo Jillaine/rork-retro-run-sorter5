@@ -7,9 +7,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ModeSelectionScreen() {
   const handleModeSelect = (mode: "beginner" | "intermediate" | "advanced") => {
-    router.push({
+    router.replace({
       pathname: "/quiz",
-      params: { mode }
+      params: { mode, timestamp: Date.now().toString() }
     });
   };
 
