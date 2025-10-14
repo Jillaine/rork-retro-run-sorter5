@@ -25,6 +25,9 @@ export default function QuizScreen() {
   const [timerActive, setTimerActive] = useState<boolean>(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<TextInput>(null);
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+  const sessionIdRef = useRef<string>(timestamp || Date.now().toString());
+  const isNavigatingRef = useRef<boolean>(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -32,60 +35,75 @@ export default function QuizScreen() {
   const isBeginnerMode = mode === "beginner";
 
   const animateFeedback = useCallback(async (isCorrect: boolean, currentScore?: number, currentWrong?: number) => {
+    if (isNavigatingRef.current) return;
+    
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    
+    if (animationRef.current) {
+      animationRef.current.stop();
+      animationRef.current = null;
+    }
+    
     setTimerActive(false);
     setShowFeedback(true);
     if (!isCorrect) {
       setShowCorrectAnswerText(true);
     }
     
-    // Show map button for beginner mode after feedback
     if (isBeginnerMode) {
       setShowMapButton(true);
     }
     
-    // Use provided values or calculate from current state
     const finalScore = currentScore !== undefined ? currentScore : (isCorrect ? score + 1 : score);
     const finalWrong = currentWrong !== undefined ? currentWrong : (isCorrect ? wrongAnswers : wrongAnswers + 1);
+    const currentIndex = currentQuestionIndex;
+    const totalQuestions = questions.length;
+    const isLast = currentIndex === totalQuestions - 1;
     
-    Animated.sequence([
+    const animation = Animated.sequence([
       Animated.timing(feedbackColor, {
         toValue: isCorrect ? 1 : -1,
         duration: 300,
         useNativeDriver: false,
       }),
       Animated.timing(feedbackColor, {
-        toValue: isCorrect ? 1 : -1, // Keep the color visible longer
-        duration: isCorrect ? 2700 : 3700, // 3 seconds total for correct, 4 seconds for wrong
+        toValue: isCorrect ? 1 : -1,
+        duration: isCorrect ? 2700 : 3700,
         useNativeDriver: false,
       }),
       Animated.timing(feedbackColor, {
         toValue: 0,
-        duration: 300, // Quick fade out
+        duration: 300,
         useNativeDriver: false,
       }),
-    ]).start(() => {
+    ]);
+    
+    animationRef.current = animation;
+    
+    animation.start(({ finished }) => {
+      if (!finished || isNavigatingRef.current) return;
+      
+      animationRef.current = null;
       setShowFeedback(false);
       setShowCorrectAnswerText(false);
       setShowMapButton(false);
       setSelectedAnswer(null);
       setTypedAnswer("");
       
-      if (isLastQuestion) {
-        // Dismiss keyboard and blur input before navigation
+      if (isLast) {
+        isNavigatingRef.current = true;
         Keyboard.dismiss();
         inputRef.current?.blur();
         
-        // Small delay to ensure keyboard is dismissed
         setTimeout(() => {
           router.push({
             pathname: "/results",
             params: { 
               score: finalScore.toString(),
-              total: questions.length.toString(),
+              total: totalQuestions.toString(),
               wrong: finalWrong.toString(),
               mode
             }
@@ -95,7 +113,7 @@ export default function QuizScreen() {
         setCurrentQuestionIndex(prev => prev + 1);
       }
     });
-  }, [feedbackColor, isLastQuestion, score, wrongAnswers, questions.length, mode, isBeginnerMode]);
+  }, [feedbackColor, currentQuestionIndex, score, wrongAnswers, questions.length, mode, isBeginnerMode]);
 
   useEffect(() => {
     if (isAdvancedMode && !showFeedback) {
@@ -148,6 +166,15 @@ export default function QuizScreen() {
       timerRef.current = null;
     }
     
+    if (animationRef.current) {
+      animationRef.current.stop();
+      animationRef.current = null;
+    }
+    
+    feedbackColor.setValue(0);
+    isNavigatingRef.current = false;
+    sessionIdRef.current = timestamp || Date.now().toString();
+    
     setTimerActive(false);
     setShowFeedback(false);
     setShowCorrectAnswerText(false);
@@ -162,7 +189,18 @@ export default function QuizScreen() {
     
     Keyboard.dismiss();
     inputRef.current?.blur();
-  }, [mode, timestamp]);
+    
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      if (animationRef.current) {
+        animationRef.current.stop();
+        animationRef.current = null;
+      }
+    };
+  }, [mode, timestamp, feedbackColor]);
 
   const handleAnswerPress = useCallback((selectedRun: string) => {
     if (!selectedRun?.trim() || selectedAnswer || showFeedback) return;
@@ -204,10 +242,18 @@ export default function QuizScreen() {
   }, [typedAnswer, showFeedback, currentQuestion.correctAnswer, animateFeedback]);
 
   const handleBackToModeSelection = useCallback(() => {
+    isNavigatingRef.current = true;
+    
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    
+    if (animationRef.current) {
+      animationRef.current.stop();
+      animationRef.current = null;
+    }
+    
     router.replace("/mode-selection");
   }, []);
 
