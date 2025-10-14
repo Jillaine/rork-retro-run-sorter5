@@ -1,15 +1,14 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { RotateCcw, Trophy } from "lucide-react-native";
+import { Trophy } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ResultsScreen() {
-  const { score, total, mode = "beginner" } = useLocalSearchParams<{
+  const { score, total } = useLocalSearchParams<{
     score: string;
     total: string;
-    mode?: string;
   }>();
 
   const finalScore = parseInt(score || "0", 10);
@@ -27,13 +26,6 @@ export default function ResultsScreen() {
   const performanceTextStyle = {
     ...styles.performanceText,
     color: percentage >= 80 ? "#9DC183" : percentage >= 60 ? "#DAA520" : "#CD853F",
-  };
-
-  const handlePlayAgain = () => {
-    router.replace({
-      pathname: "/quiz",
-      params: { mode }
-    });
   };
 
   const handleBackToModeSelection = () => {
@@ -68,11 +60,6 @@ export default function ResultsScreen() {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.playAgainButton} onPress={handlePlayAgain}>
-            <RotateCcw size={24} color="#F5F5DC" strokeWidth={2} />
-            <Text style={styles.playAgainText}>PLAY AGAIN</Text>
-          </TouchableOpacity>
-          
           <TouchableOpacity style={styles.homeButton} onPress={handleBackToModeSelection}>
             <Text style={styles.homeButtonText}>CHOOSE MODE</Text>
           </TouchableOpacity>
@@ -157,22 +144,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     gap: 16,
-  },
-  playAgainButton: {
-    backgroundColor: "#008B8B", // teal
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  playAgainText: {
-    color: "#F5F5DC",
-    fontSize: 20,
-    fontWeight: "700",
-    letterSpacing: 2,
   },
   homeButton: {
     backgroundColor: "#9DC183", // avocado green
