@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ArrowLeft, MapPin } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Animated, Keyboard, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { generateQuizQuestions, type QuizQuestion } from "@/data/quiz-data";
@@ -75,15 +75,22 @@ export default function QuizScreen() {
       setTypedAnswer("");
       
       if (isLastQuestion) {
-        router.push({
-          pathname: "/results",
-          params: { 
-            score: finalScore.toString(),
-            total: questions.length.toString(),
-            wrong: finalWrong.toString(),
-            mode
-          }
-        });
+        // Dismiss keyboard and blur input before navigation
+        Keyboard.dismiss();
+        inputRef.current?.blur();
+        
+        // Small delay to ensure keyboard is dismissed
+        setTimeout(() => {
+          router.push({
+            pathname: "/results",
+            params: { 
+              score: finalScore.toString(),
+              total: questions.length.toString(),
+              wrong: finalWrong.toString(),
+              mode
+            }
+          });
+        }, 100);
       } else {
         setCurrentQuestionIndex(prev => prev + 1);
       }
