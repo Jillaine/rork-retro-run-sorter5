@@ -482,8 +482,8 @@ const courierRuns: CourierRun[] = [
       },
       {
         streetName: "The Square",
-        numberRange: { min: 1, max: 20 },
-        oddEven: "both",
+        numberRange: { min: 2, max: 20 },
+        oddEven: "even",
       },
       {
         streetName: "Tremaine Avenue",
