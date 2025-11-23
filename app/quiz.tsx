@@ -22,12 +22,12 @@ export default function QuizScreen() {
   const [showMapButton, setShowMapButton] = useState<boolean>(false);
   const [feedbackColor] = useState(new Animated.Value(0));
   const [typedAnswer, setTypedAnswer] = useState<string>("");
-  const [timeLeft, setTimeLeft] = useState<number>(8);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<TextInput>(null);
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const sessionIdRef = useRef<string>(timestamp || Date.now().toString());
   const isNavigatingRef = useRef<boolean>(false);
+  const progressAnim = useRef(new Animated.Value(1)).current;
 
   const isAdvancedMode = mode === "advanced";
   const isBeginnerMode = mode === "beginner";
@@ -113,29 +113,38 @@ export default function QuizScreen() {
 
   useEffect(() => {
     if (isAdvancedMode && !showFeedback) {
-      setTimeLeft(8);
+      progressAnim.setValue(1);
+      
+      Animated.timing(progressAnim, {
+        toValue: 0,
+        duration: 8000,
+        useNativeDriver: false,
+      }).start();
       
       timerRef.current = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            if (timerRef.current) {
-              clearInterval(timerRef.current);
-              timerRef.current = null;
-            }
-            
-            setWrongAnswers(prevWrong => {
-              const newWrong = prevWrong + 1;
-              setScore(prevScore => {
-                animateFeedback(false, prevScore, newWrong);
-                return prevScore;
-              });
-              return newWrong;
-            });
-            return 0;
+        const currentTime = Date.now();
+        const elapsed = currentTime - (timerRef.current as any).startTime;
+        
+        if (elapsed >= 8000) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
           }
-          return prev - 1;
-        });
-      }, 1000);
+          
+          setWrongAnswers(prevWrong => {
+            const newWrong = prevWrong + 1;
+            setScore(prevScore => {
+              animateFeedback(false, prevScore, newWrong);
+              return prevScore;
+            });
+            return newWrong;
+          });
+        }
+      }, 100);
+      
+      if (timerRef.current) {
+        (timerRef.current as any).startTime = Date.now();
+      }
     }
     
     return () => {
@@ -144,7 +153,7 @@ export default function QuizScreen() {
         timerRef.current = null;
       }
     };
-  }, [questionsAnswered, showFeedback, isAdvancedMode, animateFeedback]);
+  }, [questionsAnswered, showFeedback, isAdvancedMode, animateFeedback, progressAnim]);
 
   useEffect(() => {
     if (!isBeginnerMode && !showFeedback) {
@@ -166,6 +175,7 @@ export default function QuizScreen() {
     }
     
     feedbackColor.setValue(0);
+    progressAnim.setValue(1);
     isNavigatingRef.current = false;
     sessionIdRef.current = timestamp || Date.now().toString();
     
@@ -174,7 +184,6 @@ export default function QuizScreen() {
     setShowMapButton(false);
     setSelectedAnswer(null);
     setTypedAnswer("");
-    setTimeLeft(8);
     setScore(0);
     setWrongAnswers(0);
     setQuestionsAnswered(0);
@@ -193,7 +202,7 @@ export default function QuizScreen() {
         animationRef.current = null;
       }
     };
-  }, [mode, timestamp, feedbackColor, resetDeck]);
+  }, [mode, timestamp, feedbackColor, progressAnim, resetDeck]);
 
   const handleAnswerPress = useCallback((selectedRun: string) => {
     if (!currentQuestion || !selectedRun?.trim() || selectedAnswer || showFeedback) return;
@@ -309,12 +318,6 @@ export default function QuizScreen() {
           </View>
         </View>
 
-        {isAdvancedMode && (
-          <View style={styles.timerContainer}>
-            <Text style={styles.timerText}>{timeLeft}s</Text>
-          </View>
-        )}
-
         <View style={styles.questionContainer}>
           <Text style={styles.questionText}>{currentQuestion.address}</Text>
         </View>
@@ -353,6 +356,25 @@ export default function QuizScreen() {
             style={styles.keyboardAvoidingView}
           >
             <View style={styles.inputContainer}>
+              {isAdvancedMode && (
+                <View style={styles.progressBarContainer}>
+                  <Animated.View 
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: progressAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%']
+                        }),
+                        backgroundColor: progressAnim.interpolate({
+                          inputRange: [0, 0.25, 0.5, 1],
+                          outputRange: ['#ff6666', '#DAA520', '#9DC183', '#9DC183']
+                        })
+                      }
+                    ]}
+                  />
+                </View>
+              )}
               <TextInput
                 ref={inputRef}
                 style={styles.numericInput}
@@ -434,15 +456,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  timerContainer: {
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 20,
+  progressBarContainer: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 16,
   },
-  timerText: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#9DC183",
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 4,
   },
   keyboardAvoidingView: {
     flex: 1,
