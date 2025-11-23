@@ -45,8 +45,9 @@ export default function QuizScreen() {
       animationRef.current = null;
     }
     
-    progressAnim.stopAnimation();
-    progressAnim.setValue(1);
+    progressAnim.stopAnimation(() => {
+      progressAnim.setValue(1);
+    });
     
     setShowFeedback(true);
     if (!isCorrect) {
@@ -108,8 +109,10 @@ export default function QuizScreen() {
           });
         }, 100);
       } else {
-        nextQuestion();
-        setQuestionsAnswered(prev => prev + 1);
+        setTimeout(() => {
+          nextQuestion();
+          setQuestionsAnswered(prev => prev + 1);
+        }, 50);
       }
     });
   }, [feedbackColor, questionsAnswered, score, wrongAnswers, sessionTotalQuestions, mode, isBeginnerMode, nextQuestion, progressAnim]);
