@@ -22,7 +22,7 @@ export default function QuizScreen() {
   const [showMapButton, setShowMapButton] = useState<boolean>(false);
   const [feedbackColor] = useState(new Animated.Value(0));
   const [typedAnswer, setTypedAnswer] = useState<string>("");
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef = useRef<{ id: ReturnType<typeof setInterval>; startTime: number } | null>(null);
   const inputRef = useRef<TextInput>(null);
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const sessionIdRef = useRef<string>(timestamp || Date.now().toString());
@@ -36,7 +36,7 @@ export default function QuizScreen() {
     if (isNavigatingRef.current) return;
     
     if (timerRef.current) {
-      clearInterval(timerRef.current);
+      clearInterval(timerRef.current.id);
       timerRef.current = null;
     }
     
@@ -121,13 +121,14 @@ export default function QuizScreen() {
         useNativeDriver: false,
       }).start();
       
-      timerRef.current = setInterval(() => {
+      const startTime = Date.now();
+      const intervalId = setInterval(() => {
         const currentTime = Date.now();
-        const elapsed = currentTime - (timerRef.current as any).startTime;
+        const elapsed = currentTime - startTime;
         
         if (elapsed >= 8000) {
           if (timerRef.current) {
-            clearInterval(timerRef.current);
+            clearInterval(timerRef.current.id);
             timerRef.current = null;
           }
           
@@ -142,14 +143,12 @@ export default function QuizScreen() {
         }
       }, 100);
       
-      if (timerRef.current) {
-        (timerRef.current as any).startTime = Date.now();
-      }
+      timerRef.current = { id: intervalId, startTime };
     }
     
     return () => {
       if (timerRef.current) {
-        clearInterval(timerRef.current);
+        clearInterval(timerRef.current.id);
         timerRef.current = null;
       }
     };
@@ -165,7 +164,7 @@ export default function QuizScreen() {
 
   useEffect(() => {
     if (timerRef.current) {
-      clearInterval(timerRef.current);
+      clearInterval(timerRef.current.id);
       timerRef.current = null;
     }
     
@@ -194,7 +193,7 @@ export default function QuizScreen() {
     
     return () => {
       if (timerRef.current) {
-        clearInterval(timerRef.current);
+        clearInterval(timerRef.current.id);
         timerRef.current = null;
       }
       if (animationRef.current) {
@@ -246,7 +245,7 @@ export default function QuizScreen() {
     isNavigatingRef.current = true;
     
     if (timerRef.current) {
-      clearInterval(timerRef.current);
+      clearInterval(timerRef.current.id);
       timerRef.current = null;
     }
     
