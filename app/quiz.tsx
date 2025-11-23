@@ -45,6 +45,9 @@ export default function QuizScreen() {
       animationRef.current = null;
     }
     
+    progressAnim.stopAnimation();
+    progressAnim.setValue(1);
+    
     setShowFeedback(true);
     if (!isCorrect) {
       setShowCorrectAnswerText(true);
@@ -109,7 +112,7 @@ export default function QuizScreen() {
         setQuestionsAnswered(prev => prev + 1);
       }
     });
-  }, [feedbackColor, questionsAnswered, score, wrongAnswers, sessionTotalQuestions, mode, isBeginnerMode, nextQuestion]);
+  }, [feedbackColor, questionsAnswered, score, wrongAnswers, sessionTotalQuestions, mode, isBeginnerMode, nextQuestion, progressAnim]);
 
   useEffect(() => {
     if (isAdvancedMode && !showFeedback && currentQuestion && !timerRef.current) {
@@ -156,7 +159,7 @@ export default function QuizScreen() {
         timerRef.current = null;
       }
     };
-  }, [currentQuestion?.address, showFeedback, isAdvancedMode, animateFeedback, progressAnim]);
+  }, [currentQuestion, showFeedback, isAdvancedMode, animateFeedback, progressAnim]);
 
   useEffect(() => {
     if (!isBeginnerMode && !showFeedback) {
