@@ -10,7 +10,7 @@ export interface SplitStreet {
     min: number;
     max: number;
   };
-  oddEven?: "odd" | "even";
+  oddEven?: "odd" | "even" | "both";
   specificNumbers?: number[];
 }
 
@@ -199,7 +199,7 @@ const courierRuns: CourierRun[] = [
   {
     runNumber: "Run 3",
     wholeStreets: [
-      "Alfred Street"
+      "Alfred Street",
       "Andrew Avenue",
       "Avon Terrace",
       "Barnes Court",
@@ -331,7 +331,7 @@ const courierRuns: CourierRun[] = [
       "Cramer Place",
       "Dittmer Drive",
       "Doncaster Court",
-      "Dundas Place"
+      "Dundas Place",
       "Escort Grove",
       "Flemington Lane",
       "Frimley Street",
@@ -376,7 +376,7 @@ const courierRuns: CourierRun[] = [
       "Purnell Court",
       "Racecourse Road",
       "Rakino Place",
-      "Rochester Street"
+      "Rochester Street",
       "Ross Place",
       "Sharon Place",
       "Sheffield Street",
@@ -424,7 +424,7 @@ const courierRuns: CourierRun[] = [
       "Forbury Avenue",
       "George Street",
       "Guy Avenue",
-      'Havill Street",
+      "Havill Street",
       "Ivanhoe Terrace",
       "Konini Street",
       "Lombard Street",
@@ -1722,7 +1722,7 @@ const courierRuns: CourierRun[] = [
       "Sovereign Court",
       "Te Awe Awe Court",
       "Te Awe Awe Street",
-      "The Arbors"
+      "The Arbors",
       "Townsend Place",
       "Trent Avenue",
       "Union Street",
@@ -1881,7 +1881,7 @@ function getRunForAddress(address: string): string | null {
           if (houseNumber < min || houseNumber > max) continue;
         }
 
-        if (splitStreet.oddEven) {
+        if (splitStreet.oddEven && splitStreet.oddEven !== "both") {
           const isOdd = houseNumber % 2 === 1;
           if (splitStreet.oddEven === "odd" && !isOdd) continue;
           if (splitStreet.oddEven === "even" && isOdd) continue;
