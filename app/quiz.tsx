@@ -152,7 +152,7 @@ export default function QuizScreen() {
         timerRef.current = null;
       }
     };
-  }, [questionsAnswered, showFeedback, isAdvancedMode, animateFeedback, progressAnim]);
+  }, [showFeedback, isAdvancedMode, animateFeedback, progressAnim]);
 
   useEffect(() => {
     if (!isBeginnerMode && !showFeedback) {
