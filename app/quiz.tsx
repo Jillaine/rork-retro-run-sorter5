@@ -5,14 +5,15 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Keyboard, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { generateQuizQuestions, type QuizQuestion } from "@/data/quiz-data";
+import { useQuizDeck } from "@/hooks/useQuizDeck";
 
 type QuizMode = "beginner" | "intermediate" | "advanced";
 
 export default function QuizScreen() {
   const { mode = "beginner", timestamp } = useLocalSearchParams<{ mode?: QuizMode; timestamp?: string }>();
-  const [questions, setQuestions] = useState<QuizQuestion[]>(() => generateQuizQuestions(10));
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+  const { currentQuestion, nextQuestion, resetDeck } = useQuizDeck();
+  const [sessionTotalQuestions] = useState<number>(10);
+  const [questionsAnswered, setQuestionsAnswered] = useState<number>(0);
   const [score, setScore] = useState<number>(0);
   const [wrongAnswers, setWrongAnswers] = useState<number>(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -22,15 +23,12 @@ export default function QuizScreen() {
   const [feedbackColor] = useState(new Animated.Value(0));
   const [typedAnswer, setTypedAnswer] = useState<string>("");
   const [timeLeft, setTimeLeft] = useState<number>(10);
-  const [timerActive, setTimerActive] = useState<boolean>(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<TextInput>(null);
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const sessionIdRef = useRef<string>(timestamp || Date.now().toString());
   const isNavigatingRef = useRef<boolean>(false);
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
   const isAdvancedMode = mode === "advanced";
   const isBeginnerMode = mode === "beginner";
 
@@ -47,7 +45,6 @@ export default function QuizScreen() {
       animationRef.current = null;
     }
     
-    setTimerActive(false);
     setShowFeedback(true);
     if (!isCorrect) {
       setShowCorrectAnswerText(true);
@@ -59,9 +56,7 @@ export default function QuizScreen() {
     
     const finalScore = currentScore !== undefined ? currentScore : (isCorrect ? score + 1 : score);
     const finalWrong = currentWrong !== undefined ? currentWrong : (isCorrect ? wrongAnswers : wrongAnswers + 1);
-    const currentIndex = currentQuestionIndex;
-    const totalQuestions = questions.length;
-    const isLast = currentIndex === totalQuestions - 1;
+    const isLast = questionsAnswered === sessionTotalQuestions - 1;
     
     const animation = Animated.sequence([
       Animated.timing(feedbackColor, {
@@ -103,22 +98,22 @@ export default function QuizScreen() {
             pathname: "/results",
             params: { 
               score: finalScore.toString(),
-              total: totalQuestions.toString(),
+              total: sessionTotalQuestions.toString(),
               wrong: finalWrong.toString(),
               mode
             }
           });
         }, 100);
       } else {
-        setCurrentQuestionIndex(prev => prev + 1);
+        nextQuestion();
+        setQuestionsAnswered(prev => prev + 1);
       }
     });
-  }, [feedbackColor, currentQuestionIndex, score, wrongAnswers, questions.length, mode, isBeginnerMode]);
+  }, [feedbackColor, questionsAnswered, score, wrongAnswers, sessionTotalQuestions, mode, isBeginnerMode, nextQuestion]);
 
   useEffect(() => {
     if (isAdvancedMode && !showFeedback) {
       setTimeLeft(10);
-      setTimerActive(true);
       
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
@@ -127,7 +122,6 @@ export default function QuizScreen() {
               clearInterval(timerRef.current);
               timerRef.current = null;
             }
-            setTimerActive(false);
             
             setWrongAnswers(prevWrong => {
               const newWrong = prevWrong + 1;
@@ -150,7 +144,7 @@ export default function QuizScreen() {
         timerRef.current = null;
       }
     };
-  }, [currentQuestionIndex, showFeedback, isAdvancedMode, animateFeedback]);
+  }, [questionsAnswered, showFeedback, isAdvancedMode, animateFeedback]);
 
   useEffect(() => {
     if (!isBeginnerMode && !showFeedback) {
@@ -158,7 +152,7 @@ export default function QuizScreen() {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [currentQuestionIndex, showFeedback, isBeginnerMode]);
+  }, [questionsAnswered, showFeedback, isBeginnerMode]);
 
   useEffect(() => {
     if (timerRef.current) {
@@ -175,7 +169,6 @@ export default function QuizScreen() {
     isNavigatingRef.current = false;
     sessionIdRef.current = timestamp || Date.now().toString();
     
-    setTimerActive(false);
     setShowFeedback(false);
     setShowCorrectAnswerText(false);
     setShowMapButton(false);
@@ -184,8 +177,8 @@ export default function QuizScreen() {
     setTimeLeft(10);
     setScore(0);
     setWrongAnswers(0);
-    setCurrentQuestionIndex(0);
-    setQuestions(generateQuizQuestions(10));
+    setQuestionsAnswered(0);
+    resetDeck();
     
     Keyboard.dismiss();
     inputRef.current?.blur();
@@ -200,10 +193,10 @@ export default function QuizScreen() {
         animationRef.current = null;
       }
     };
-  }, [mode, timestamp, feedbackColor]);
+  }, [mode, timestamp, feedbackColor, resetDeck]);
 
   const handleAnswerPress = useCallback((selectedRun: string) => {
-    if (!selectedRun?.trim() || selectedAnswer || showFeedback) return;
+    if (!currentQuestion || !selectedRun?.trim() || selectedAnswer || showFeedback) return;
     
     setSelectedAnswer(selectedRun);
     const isCorrect = selectedRun === currentQuestion.correctAnswer;
@@ -217,15 +210,14 @@ export default function QuizScreen() {
     setTimeout(() => {
       animateFeedback(isCorrect);
     }, 200);
-  }, [selectedAnswer, showFeedback, currentQuestion.correctAnswer, animateFeedback]);
+  }, [currentQuestion, selectedAnswer, showFeedback, animateFeedback]);
 
   const handleTypedSubmit = useCallback(() => {
-    if (!typedAnswer.trim() || showFeedback) return;
+    if (!currentQuestion || !typedAnswer.trim() || showFeedback) return;
     
     const normalizedTyped = typedAnswer.trim().toLowerCase();
     const normalizedCorrect = currentQuestion.correctAnswer.toLowerCase();
     
-    // Check if the typed answer matches (with or without "run" prefix)
     const isCorrect = normalizedTyped === normalizedCorrect || 
                      normalizedTyped === normalizedCorrect.replace("run ", "") ||
                      `run ${normalizedTyped}` === normalizedCorrect;
@@ -239,7 +231,7 @@ export default function QuizScreen() {
     setTimeout(() => {
       animateFeedback(isCorrect);
     }, 200);
-  }, [typedAnswer, showFeedback, currentQuestion.correctAnswer, animateFeedback]);
+  }, [currentQuestion, typedAnswer, showFeedback, animateFeedback]);
 
   const handleBackToModeSelection = useCallback(() => {
     isNavigatingRef.current = true;
@@ -265,18 +257,17 @@ export default function QuizScreen() {
   }, []);
 
   const handleShowOnMap = useCallback(() => {
+    if (!currentQuestion) return;
     const mapUrl = generateMapUrl(currentQuestion.address);
     
     if (Platform.OS === 'web') {
-      // Open in new tab for web
       window.open(mapUrl, '_blank');
     } else {
-      // Use Linking for mobile
       Linking.openURL(mapUrl).catch(err => {
         console.error('Failed to open map:', err);
       });
     }
-  }, [currentQuestion.address, generateMapUrl]);
+  }, [currentQuestion, generateMapUrl]);
 
   const animatedBackgroundStyle = {
     backgroundColor: feedbackColor.interpolate({
@@ -309,7 +300,7 @@ export default function QuizScreen() {
           </TouchableOpacity>
           
           <Text style={styles.questionCounter}>
-            Question {currentQuestionIndex + 1} of {questions.length}
+            Question {questionsAnswered + 1} of {sessionTotalQuestions}
           </Text>
           
           <View style={styles.scoreContainer}>
