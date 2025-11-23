@@ -112,7 +112,7 @@ export default function QuizScreen() {
   }, [feedbackColor, questionsAnswered, score, wrongAnswers, sessionTotalQuestions, mode, isBeginnerMode, nextQuestion]);
 
   useEffect(() => {
-    if (isAdvancedMode && !showFeedback && currentQuestion) {
+    if (isAdvancedMode && !showFeedback && currentQuestion && !timerRef.current) {
       progressAnim.setValue(1);
       
       Animated.timing(progressAnim, {
