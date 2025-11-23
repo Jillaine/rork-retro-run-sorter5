@@ -22,7 +22,7 @@ export default function QuizScreen() {
   const [showMapButton, setShowMapButton] = useState<boolean>(false);
   const [feedbackColor] = useState(new Animated.Value(0));
   const [typedAnswer, setTypedAnswer] = useState<string>("");
-  const [timeLeft, setTimeLeft] = useState<number>(10);
+  const [timeLeft, setTimeLeft] = useState<number>(8);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<TextInput>(null);
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
@@ -113,7 +113,7 @@ export default function QuizScreen() {
 
   useEffect(() => {
     if (isAdvancedMode && !showFeedback) {
-      setTimeLeft(10);
+      setTimeLeft(8);
       
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
@@ -174,7 +174,7 @@ export default function QuizScreen() {
     setShowMapButton(false);
     setSelectedAnswer(null);
     setTypedAnswer("");
-    setTimeLeft(10);
+    setTimeLeft(8);
     setScore(0);
     setWrongAnswers(0);
     setQuestionsAnswered(0);
