@@ -115,11 +115,13 @@ export default function QuizScreen() {
     if (isAdvancedMode && !showFeedback && currentQuestion && !timerRef.current) {
       progressAnim.setValue(1);
       
-      Animated.timing(progressAnim, {
+      const animation = Animated.timing(progressAnim, {
         toValue: 0,
         duration: 8000,
         useNativeDriver: false,
-      }).start();
+      });
+      
+      animation.start();
       
       const startTime = Date.now();
       const intervalId = setInterval(() => {
@@ -131,6 +133,8 @@ export default function QuizScreen() {
             clearInterval(timerRef.current.id);
             timerRef.current = null;
           }
+          
+          animation.stop();
           
           setWrongAnswers(prevWrong => {
             const newWrong = prevWrong + 1;
@@ -152,7 +156,7 @@ export default function QuizScreen() {
         timerRef.current = null;
       }
     };
-  }, [currentQuestion, showFeedback, isAdvancedMode, animateFeedback, progressAnim]);
+  }, [currentQuestion?.address, showFeedback, isAdvancedMode, animateFeedback, progressAnim]);
 
   useEffect(() => {
     if (!isBeginnerMode && !showFeedback) {
