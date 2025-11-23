@@ -112,7 +112,7 @@ export default function QuizScreen() {
   }, [feedbackColor, questionsAnswered, score, wrongAnswers, sessionTotalQuestions, mode, isBeginnerMode, nextQuestion]);
 
   useEffect(() => {
-    if (isAdvancedMode && !showFeedback) {
+    if (isAdvancedMode && !showFeedback && currentQuestion) {
       progressAnim.setValue(1);
       
       Animated.timing(progressAnim, {
@@ -152,7 +152,7 @@ export default function QuizScreen() {
         timerRef.current = null;
       }
     };
-  }, [showFeedback, isAdvancedMode, animateFeedback, progressAnim]);
+  }, [currentQuestion, showFeedback, isAdvancedMode, animateFeedback, progressAnim]);
 
   useEffect(() => {
     if (!isBeginnerMode && !showFeedback) {
