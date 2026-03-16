@@ -34,8 +34,9 @@
     },
 
     "web": {
-      "favicon": "./assets/images/favicon.png"
-    },
+  "favicon": "./assets/images/favicon.png",
+  "manifest": "./public/manifest.json"
+},
 
     "plugins": [
       [
