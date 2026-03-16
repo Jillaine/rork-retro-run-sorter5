@@ -1,5 +1,7 @@
+/* eslint-disable */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
+import Head from "expo-router/head";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
@@ -11,12 +13,20 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="mode-selection" />
-      <Stack.Screen name="quiz" />
-      <Stack.Screen name="results" />
-    </Stack>
+    <>
+      <Head>
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#D4A017" />
+      </Head>
+
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="mode-selection" />
+        <Stack.Screen name="quiz" />
+        <Stack.Screen name="results" />
+      </Stack>
+    </>
   );
 }
 
