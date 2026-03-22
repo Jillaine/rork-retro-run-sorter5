@@ -1,10 +1,12 @@
 {
   "expo": {
-    "name": "Retro Run Sorter",
+    "name": "Metro Run Sort",
     "slug": "retro-run-sorter",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon-512.png",
+
+    "icon": "./assets/images/icon.png",
+
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -18,42 +20,22 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.rork.retro-run-sorter",
-      "infoPlist": {
-        "UIBackgroundModes": ["audio"],
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone"
-      }
+      "icon": "./assets/images/icon.png"
     },
 
     "android": {
+      "package": "app.rork.retro-run-sorter",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.retro-run-sorter",
-      "permissions": ["RECORD_AUDIO"]
+      "icon": "./assets/images/icon.png"
     },
 
     "web": {
-      "favicon": "./assets/images/icon-192.png"
-    },
-
-    "plugins": [
-      [
-        "expo-router",
-        {
-          "origin": "https://rork.com/"
-        }
-      ],
-      [
-        "expo-av",
-        {
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone"
-        }
-      ]
-    ],
-
-    "experiments": {
-      "typedRoutes": true
+      "favicon": "./assets/images/icon.png",
+      "bundler": "metro",
+      "output": "static"
     }
   }
 }
